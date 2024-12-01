@@ -15,7 +15,7 @@ fun main(){
         nome = "Sala 1",
         qtdAssentoPorFila = 10,
         qtdFilas = 5
-    )123123
+    )
     val sessao:Sessao = Sessao(
         filme = Filme(),
         gerenciadorAssentos = GerenciadorAssentos(sala),
