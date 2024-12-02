@@ -43,7 +43,7 @@ class GerenciadorAssentos{
 
     }
 
-    fun confirmarOcupacao(nomeAssento:String, tipoEntrada: TipoEntrada):Assento? {
+    fun confirmarOcupacao(nomeAssento:String):Assento? {
         var assentoEncontrado: Assento? = null
         mapaAssento.forEach { filas ->
             filas.forEach { assento ->

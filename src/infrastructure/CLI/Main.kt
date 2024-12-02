@@ -1,9 +1,8 @@
-package infrastructure.CLI
-
+import infrastructure.managers.FilmeManager
+import infrastructure.managers.SalaManager
+import infrastructure.managers.SessaoManager
 import java.util.Scanner
-import kotlin.system.exitProcess
 
-// Classe principal
 fun main() {
     val cliApp = CLIApp()
     cliApp.start()
@@ -12,10 +11,11 @@ fun main() {
 // Classe da aplicação CLI
 class CLIApp {
     private val scanner = Scanner(System.`in`)
-    private val menuManager = MenuManager()
+    private val repository = CentralRepository()
+    private val menuManager = MenuManager(repository)
 
     fun start() {
-        println("Bem-vindo ao CLI App!")
+        println("Bem-vindo ao Gerenciador de Filmes!")
         while (true) {
             try {
                 menuManager.showMainMenu()
@@ -24,47 +24,101 @@ class CLIApp {
                 menuManager.handleOption(input)
             } catch (e: Exception) {
                 println("Erro: ${e.message}")
+            } finally {
+                repository.saveData()
             }
         }
     }
 }
 
 // Gerenciador de menus
-class MenuManager {
+class MenuManager(repository: CentralRepository) {
     private val scanner = Scanner(System.`in`)
+    val salaManager = SalaManager(repository)
+    val filmeManager = FilmeManager(repository)
+    val sessaoManager = SessaoManager(repository)
 
     fun showMainMenu() {
         println("\n--- Menu Principal ---")
-        println("1. Exibir informações")
-        println("2. Realizar requisição")
-        println("3. Sair")
+        println("1. Gerenciar Filmes")
+        println("2. Gerenciar Salas")
+        println("3. Gerenciar Sessões")
+        println("4. Sair")
     }
 
     fun handleOption(option: String) {
         when (option) {
-            "1" -> showInfoMenu()
-            "2" -> performRequest()
-            "3" -> exitCLI()
+            "1" -> showFilmeMenu()
+            "2" -> showSalaMenu()
+            "3" -> showSessaoMenu()
+            "4" -> exitCLI()
             else -> println("Opção inválida. Tente novamente.")
         }
     }
 
-    private fun showInfoMenu() {
-        println("\n--- Informações ---")
-        println("Esta é uma aplicação CLI interativa escrita em Kotlin!")
-        println("Pressione Enter para voltar ao menu principal.")
-        scanner.nextLine()
+    private fun showFilmeMenu() {
+        while (true) {
+            println("\n--- Gerenciar Filmes ---")
+            println("1. Criar Filme")
+            println("2. Listar Filmes")
+            println("3. Atualizar Filme")
+            println("4. Excluir Filme")
+            println("5. Voltar ao Menu Principal")
+            print("Selecione uma opção: ")
+            val option = scanner.nextLine().trim()
+            when (option) {
+                "1" -> filmeManager.createFilme()
+                "2" -> filmeManager.listFilmes()
+                "3" -> filmeManager.updateFilme()
+                "4" -> filmeManager.deleteFilme()
+                "5" -> return
+                else -> println("Opção inválida. Tente novamente.")
+            }
+        }
     }
 
-    private fun performRequest() {
-        println("\n--- Informações ---")
-        println("Esta é uma aplicação CLI interativa escrita em Kotlin!")
-        println("Pressione Enter para voltar ao menu principal.")
-        scanner.nextLine()
+    private fun showSalaMenu() {
+        while (true) {
+            println("\n--- Gerenciar Salas ---")
+            println("1. Criar Sala")
+            println("2. Listar Salas")
+            println("3. Atualizar Sala")
+            println("4. Excluir Sala")
+            println("5. Voltar ao Menu Principal")
+            print("Selecione uma opção: ")
+            val option = scanner.nextLine().trim()
+            when (option) {
+                "1" -> salaManager.createSala()
+                "2" -> salaManager.listSalas()
+                "3" -> salaManager.updateSala()
+                "4" -> salaManager.deleteSala()
+                "5" -> return
+                else -> println("Opção inválida. Tente novamente.")
+            }
+        }
+    }
+
+    private fun showSessaoMenu() {
+        while (true) {
+            println("\n--- Gerenciar Sessões ---")
+            println("1. Criar Sessão")
+            println("2. Listar Sessões")
+            println("3. Comprar ingresso")
+            println("4. Voltar ao Menu Principal")
+            print("Selecione uma opção: ")
+            val option = scanner.nextLine().trim()
+            when (option) {
+                "1" -> sessaoManager.createSessao()
+                "2" -> sessaoManager.listSessoes()
+                "3" -> sessaoManager.comprarIngresso()
+                "4" -> return
+                else -> println("Opção inválida. Tente novamente.")
+            }
+        }
     }
 
     private fun exitCLI() {
         println("Saindo da aplicação. Até mais!")
-        exitProcess(0)
+        kotlin.system.exitProcess(0)
     }
 }
