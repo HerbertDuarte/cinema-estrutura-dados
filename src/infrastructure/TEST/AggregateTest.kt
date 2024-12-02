@@ -11,12 +11,12 @@ import java.time.LocalDate
 
 fun main(){
 
-    val sala: Sala = Sala(
+    val sala = Sala(
         nome = "Sala 1",
         qtdAssentoPorFila = 10,
         qtdFilas = 5
     )
-    val sessao:Sessao = Sessao(
+    val sessao = Sessao(
         filme = Filme(),
         gerenciadorAssentos = GerenciadorAssentos(sala),
         reproducao3D = true,
