@@ -10,7 +10,6 @@ import java.util.Scanner
 
 class SessaoManager(private val repo: CentralRepository) {
     private val scanner = Scanner(System.`in`)
-    private val sessoes = mutableListOf<Sessao>()
 
     fun createSessao() {
         println("\n--- Criar Sessão ---")
@@ -60,6 +59,21 @@ class SessaoManager(private val repo: CentralRepository) {
             return
         }
 
+        println("Selecione se é uma reprodução 3D:")
+        TipoReproducao.values().forEach { tipo -> println("${tipo.cod}. ${tipo.name}") }
+        println("Opções:")
+        println("0. Reprodução normal")
+        println("1. Reprodução 3D")
+
+        val respostaIs3D = scanner.nextInt()
+        scanner.nextLine()
+        val reproducao3D = respostaIs3D == 1
+
+        if (respostaIs3D > 1 || respostaIs3D < 0) {
+            println("Resposta inválida.")
+            return
+        }
+
         print("Horário (formato: dd/MM/yyyy HH:mm): ")
         val horarioStr = scanner.nextLine()
         val horario = try {
@@ -76,39 +90,48 @@ class SessaoManager(private val repo: CentralRepository) {
         val gerenciadorAssentos = GerenciadorAssentos(sala)
         val sessao = Sessao(
             filme = filme,
-            reproducao3D = tipoReproducao == TipoReproducao.DUBLADO_COM_LEGENDA,
+            reproducao3D = reproducao3D,
             gerenciadorAssentos = gerenciadorAssentos,
             tipoAudio = tipoReproducao,
             horario = horario,
-            valorEntradaInteira = valorEntrada
+            valorEntradaInteira = valorEntrada,
+            cod = null
         )
-        sessoes.add(sessao)
+
+        if (!validaDataSessao(sessao)) {
+            println("Conflito de horário detectado! A sessão não pode ser criada.")
+            return
+        }
+        repo.sessoes.add(sessao)
         println("Sessão criada com sucesso!")
     }
 
     fun listSessoes() {
         println("\n--- Lista de Sessões ---")
-        if (sessoes.isEmpty()) {
+        if (repo.sessoes.isEmpty()) {
             println("Nenhuma sessão cadastrada.")
         } else {
-            sessoes.forEachIndexed { index, sessao ->
+            repo.sessoes.forEachIndexed { index, sessao ->
+                println()
                 println(
                     """
                     Sessão ${index + 1}
                     Filme: ${sessao.filme.titulo}
                     Sala: ${sessao.gerenciadorAssentos.sala.nome}
                     Horário: ${sessao.horario}
+                    3D: ${if (sessao.reproducao3D) "Sim" else "Não"}
                     Tipo de Reprodução: ${sessao.tipoAudio.name}
                     Valor Entrada Inteira: R$ ${sessao.valorEntradaInteira}
                     """.trimIndent()
                 )
+                println()
             }
         }
     }
 
     fun comprarIngresso() {
         println("\n--- Comprar Ingresso ---")
-        if (sessoes.isEmpty()) {
+        if (repo.sessoes.isEmpty()) {
             println("Nenhuma sessão disponível.")
             return
         }
@@ -117,11 +140,11 @@ class SessaoManager(private val repo: CentralRepository) {
         print("Selecione a sessão: ")
         val sessaoIndex = scanner.nextInt() - 1
         scanner.nextLine() // Consumir quebra de linha
-        if (sessaoIndex !in sessoes.indices) {
+        if (sessaoIndex !in repo.sessoes.indices) {
             println("Sessão inválida.")
             return
         }
-        val sessao = sessoes[sessaoIndex]
+        val sessao = repo.sessoes[sessaoIndex]
 
         println("Mapa de assentos:")
         sessao.gerenciadorAssentos.exibeAssentos()
@@ -147,6 +170,8 @@ class SessaoManager(private val repo: CentralRepository) {
             println("Sessão: ${ingresso.sessao.filme.titulo}")
             println("Assento: ${ingresso.idAssento}")
             println("Tipo de Entrada: ${ingresso.tipoEntrada}")
+
+            repo.ingressos.add(ingresso)
         } catch (e: Exception) {
             println("Erro ao comprar ingresso: ${e.message}")
         }
@@ -154,7 +179,7 @@ class SessaoManager(private val repo: CentralRepository) {
 
     fun listarAssentos() {
         println("\n--- Listar Assentos ---")
-        if (sessoes.isEmpty()) {
+        if (repo.sessoes.isEmpty()) {
             println("Nenhuma sessão disponível.")
             return
         }
@@ -163,14 +188,105 @@ class SessaoManager(private val repo: CentralRepository) {
         print("Selecione a sessão: ")
         val sessaoIndex = scanner.nextInt() - 1
         scanner.nextLine() // Consumir quebra de linha
-        if (sessaoIndex !in sessoes.indices) {
+        if (sessaoIndex !in repo.sessoes.indices) {
             println("Sessão inválida.")
             return
         }
-        val sessao = sessoes[sessaoIndex]
+        val sessao = repo.sessoes[sessaoIndex]
 
         println("Mapa de assentos:")
         sessao.gerenciadorAssentos.exibeAssentos()
 
     }
+
+    fun deleteSessao() {
+        println("\n--- Deletar Sessão ---")
+        if (repo.sessoes.isEmpty()) {
+            println("Nenhuma sessão disponível.")
+            return
+        }
+
+        listSessoes()
+        print("Selecione a sessão para deletar: ")
+        val sessaoIndex = scanner.nextInt() - 1
+        scanner.nextLine() // Consumir quebra de linha
+        if (sessaoIndex !in repo.sessoes.indices) {
+            println("Sessão inválida.")
+            return
+        }
+
+        val sessaoRemovida = repo.sessoes.removeAt(sessaoIndex)
+        println("Sessão '${sessaoRemovida.filme.titulo}' na sala '${sessaoRemovida.gerenciadorAssentos.sala.nome}' removida com sucesso!")
+    }
+
+
+
+    fun calcularTaxaOcupacao() {
+        println("\n--- Calcular Taxa de Ocupação ---")
+        if (repo.sessoes.isEmpty()) {
+            println("Nenhuma sessão disponível.")
+            return
+        }
+
+        listSessoes()
+        print("Selecione a sessão: ")
+        val sessaoIndex = scanner.nextInt() - 1
+        scanner.nextLine() // Consumir quebra de linha
+        if (sessaoIndex !in repo.sessoes.indices) {
+            println("Sessão inválida.")
+            return
+        }
+
+        val sessao = repo.sessoes[sessaoIndex]
+        val totalAssentos = sessao.gerenciadorAssentos.sala.getCapacidade()
+        val assentosOcupados = totalAssentos - sessao.gerenciadorAssentos.getAssentosDisponiveis().size
+        val taxaOcupacao = (assentosOcupados.toDouble() / totalAssentos) * 100
+
+        println("Taxa de Ocupação: %.2f%%".format(taxaOcupacao))
+    }
+
+    fun calcularFaturamento() {
+        println("\n--- Calcular Faturamento ---")
+        if (repo.sessoes.isEmpty()) {
+            println("Nenhuma sessão disponível.")
+            return
+        }
+
+        listSessoes()
+        print("Selecione a sessão: ")
+        val sessaoIndex = scanner.nextInt() - 1
+        scanner.nextLine()
+        if (sessaoIndex !in repo.sessoes.indices) {
+            println("Sessão inválida.")
+            return
+        }
+
+        val sessao = repo.sessoes[sessaoIndex]
+        val ingressos = repo.ingressos.filter {
+            it.sessao.cod == sessao.cod
+        }
+        var faturamentoTotal = 0.0
+        ingressos.forEach {
+            faturamentoTotal += it.precoFinal;
+        }
+        println("Faturamento total: R$ %.2f".format(faturamentoTotal))
+    }
+
+    private fun validaDataSessao(novaSessao: Sessao): Boolean {
+
+        val inicioNovaSessao = novaSessao.horario
+        val fimNovaSessao = novaSessao.horario.plusMinutes(novaSessao.filme.duracaoMinutos.toLong())
+
+        repo.sessoes.filter { it.gerenciadorAssentos.sala.cod == novaSessao.gerenciadorAssentos.sala.cod }
+            .forEach { sessaoExistente ->
+                    val inicioExistente = sessaoExistente.horario
+                    val fimExistente = sessaoExistente.horario.plusMinutes(sessaoExistente.filme.duracaoMinutos.toLong())
+                    if (fimNovaSessao.isAfter(inicioExistente.minusMinutes(20)) &&
+                        inicioNovaSessao.isBefore(fimExistente.plusMinutes(20))) {
+                        return false
+                    }
+            }
+        return true
+    }
+
 }

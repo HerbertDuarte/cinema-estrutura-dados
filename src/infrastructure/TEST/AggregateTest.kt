@@ -30,7 +30,8 @@ fun main(){
         reproducao3D = true,
         horario = LocalDateTime.of(2025,1,1,12,0),
         tipoAudio = TipoReproducao.DUBLADO,
-        valorEntradaInteira = 22.0
+        valorEntradaInteira = 22.0,
+        cod = null
     )
 
     sessao.gerenciadorAssentos.exibeAssentos()

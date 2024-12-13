@@ -38,6 +38,7 @@ class MenuManager(repository: CentralRepository) {
     val filmeManager = FilmeManager(repository)
     val sessaoManager = SessaoManager(repository)
 
+
     fun showMainMenu() {
         println("\n--- Menu Principal ---")
         println("1. Gerenciar Filmes")
@@ -104,14 +105,22 @@ class MenuManager(repository: CentralRepository) {
             println("1. Criar Sessão")
             println("2. Listar Sessões")
             println("3. Comprar ingresso")
-            println("4. Voltar ao Menu Principal")
+            println("4. Deletar Sessão")
+            println("5. Listar assentos")
+            println("6. Verificar faturamento")
+            println("7. Verificar taxa de ocupação")
+            println("8. Voltar ao Menu Principal")
             print("Selecione uma opção: ")
             val option = scanner.nextLine().trim()
             when (option) {
                 "1" -> sessaoManager.createSessao()
                 "2" -> sessaoManager.listSessoes()
                 "3" -> sessaoManager.comprarIngresso()
-                "4" -> return
+                "4" -> sessaoManager.deleteSessao()
+                "5" -> sessaoManager.listarAssentos()
+                "6" -> sessaoManager.calcularFaturamento()
+                "7" -> sessaoManager.calcularTaxaOcupacao()
+                "8" -> return
                 else -> println("Opção inválida. Tente novamente.")
             }
         }

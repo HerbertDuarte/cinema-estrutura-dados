@@ -59,4 +59,17 @@ class GerenciadorAssentos{
         return assentoEncontrado
     }
 
+    fun getAssentosDisponiveis(): List<Assento> {
+        val assentosDisponiveis = mutableListOf<Assento>()
+
+        mapaAssento.forEach { filas ->
+            filas.forEach { assento ->
+                if (!assento.ocupado) {
+                    assentosDisponiveis.add(assento)
+                }
+            }
+        }
+
+        return assentosDisponiveis
+    }
 }

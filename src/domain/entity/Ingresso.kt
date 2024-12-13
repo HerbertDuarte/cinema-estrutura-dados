@@ -5,30 +5,29 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 class Ingresso {
-    val tipoEntrada:TipoEntrada
+    val tipoEntrada: TipoEntrada
     val idAssento: String
-    val sessao:Sessao
+    val sessao: Sessao
     val precoFinal: Double
     val codIngresso: String
 
 
     @OptIn(ExperimentalUuidApi::class)
-    constructor(tipoEntrada: TipoEntrada, idAssento: String, sessao: Sessao) {
+    constructor(tipoEntrada: TipoEntrada, idAssento: String, sessao: Sessao, codIngresso: String?) {
         this.tipoEntrada = tipoEntrada
         this.idAssento = idAssento
         this.sessao = sessao
-        this.codIngresso = Uuid.random().toString()
+        this.codIngresso = codIngresso ?: Uuid.random().toString()
         this.precoFinal = calculaPreco(tipoEntrada, sessao)
     }
 
-    private fun calculaPreco(tipoEntrada: TipoEntrada,sessao:Sessao):Double{
-        var preco:Double
-        if(tipoEntrada == TipoEntrada.INTEIRA)
+    private fun calculaPreco(tipoEntrada: TipoEntrada, sessao: Sessao): Double {
+        var preco: Double
+        if (tipoEntrada == TipoEntrada.INTEIRA)
             preco = sessao.valorEntradaInteira
         else
-            preco = sessao.valorEntradaInteira /2
-        if(sessao.reproducao3D)
-            return preco * 1.25
+            preco = sessao.valorEntradaInteira / 2
+
         return preco
     }
 
